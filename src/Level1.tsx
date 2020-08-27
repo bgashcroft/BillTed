@@ -5,11 +5,6 @@ import { FrameData, QuestionPage, Options, OptionActions } from "./LevelObjects"
 export default class Level1 {
     public levelDesign: FrameData;
     constructor() {
-
-
-
-
-
         var questions: QuestionPage[] = [
 
             {
@@ -23,15 +18,45 @@ export default class Level1 {
                         dudeStatement: "so true",
                         narrStatement: "not helpful"
                     },
-                    
-
+                    {
+                        option: "low",
+                        action: OptionActions.Wrong,
+                        dudeStatement: "so true",
+                        narrStatement: "not helpful"
+                    },
+                    {
+                        option: "medium",
+                        action: OptionActions.Wrong,
+                        dudeStatement: "so true",
+                        narrStatement: "not helpful"
+                    }
                 ],
                 points: 10
             },
             {
                 theQuestion: "Who am I",
                 dudeStatement: "Deep bro",
-                options: [],
+                options: [
+                    {
+                        option: "high",
+                        action: OptionActions.Correct,
+                        dudeStatement: "so true",
+                        narrStatement: "not helpful"
+                    },
+                    {
+                        option: "low",
+                        action: OptionActions.Wrong,
+                        dudeStatement: "so true",
+                        narrStatement: "not helpful"
+                    },
+                    {
+                        option: "medium",
+                        action: OptionActions.Wrong,
+                        dudeStatement: "so true",
+                        narrStatement: "not helpful"
+                    }
+
+                ],
                 points: 10
             }
 

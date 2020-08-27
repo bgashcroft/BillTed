@@ -2,6 +2,8 @@ import React from 'react';
 import logo from './logo.svg';
 import Signin from './SignIn';
 import GamePage from './GamePage';
+
+
 import './App.css';
 
 interface AppState {
@@ -25,8 +27,8 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
 
-  handleLevel = (level:string)=>{
-    this.setState({mode:"Level2"});
+  handleLevel = (level: string) => {
+    this.setState({ mode: "Level2" });
   }
 
   render() {
@@ -39,12 +41,12 @@ export default class App extends React.Component<AppProps, AppState> {
       case "Game":
         content = <GamePage azureCommuncation={""} playerName={this.state.playerName} onLevel={this.handleLevel} />
         break
-      
+
     }
 
     return <div className="App">
       <header className="App-header">
-
+        {content}
       </header>
     </div>
   }
