@@ -3,16 +3,39 @@ import * as signalR from "@aspnet/signalr";
 
 export default class FlightClient {
     private baseAPI: string;
-    onNotification: (notification: Notification) => void;
+    teamNotification: (team: string) => void;
+    getMessage: (team: string, message: string) => void;
+    getChoice: (team: string, choice: string) => void;
 
-    constructor(onNotification: (notification: Notification) => void) {
-        this.onNotification = onNotification;
-        this.baseAPI = "https://agentassist.nonprod.aa.com/adminBFF/api";
+    constructor(
+        teamNotification: (team: string) => void,
+        getMessage: (team: string, message: string) => void,
+        getChoice: (team: string, choice: string) => void
+    ) {
+        this.teamNotification = teamNotification;
+        this.getMessage = getMessage;
+        this.getChoice = getChoice;
+
+        // this.baseAPI = "http://localhost:7071/api";
+        this.baseAPI = "https://billtedbff.azurewebsites.net/api";
+        this.teams = []
     }
 
+    teams: string[]
+    handleSignIn = (name: string, team: string) => {
+        var key = team + ":" + name;
+        var item = this.teams.filter(x => x == key);
+        if (item == null)
+            this.teams.push(key);
+        if (typeof this.onReply !== "undefined") {
+            this.onReply(name + " joined " + team, this.teams);
+        }
+    }
 
-    handlePing = (x: any) => {
+    handlePing = (x: any, y: any, z: any) => {
         console.log(x);
+        console.log(y);
+        console.log(z);
     }
 
     sendPing = () => {
@@ -25,19 +48,61 @@ export default class FlightClient {
     }
 
 
-    handleConnect = (connectedCallback: () => void) => {
+    onReply?: (notification: string, teams: string[]) => void;
+
+    sendSignIn = (user: string, team: string, onReply: (notification: string, teams: string[]) => void) => {
+        var options: RequestInit = {
+            mode: 'cors',
+            method: "GET"
+        };
+        this.onReply = onReply;
+
+        fetch(this.baseAPI + '/SignIn?user=' + user + '&team=' + team, options);
+    }
+
+    sendTeamComplete = (team: string) => {
+        var options: RequestInit = {
+            mode: 'cors',
+            method: "GET"
+        };
+
+        fetch(this.baseAPI + '/TeamComplete?team=' + team, options);
+    }
+
+    sendMessage = (team: string, message: string) => {
+        var options: RequestInit = {
+            mode: 'cors',
+            method: "GET"
+        };
+
+        fetch(this.baseAPI + '/SendMessage?team=' + team + '&message=' + message, options);
+    }
+
+    sendChoice = (team: string, choice: string) => {
+        var options: RequestInit = {
+            mode: 'cors',
+            method: "GET"
+        };
+
+        fetch(this.baseAPI + '/ChoseAnswer?team=' + team + '&choice=' + choice, options);
+    }
+
+    handleConnect = (userID: string, connectedCallback: () => void) => {
 
         //.withUrl('https://agentassist.nonprod.aa.com/adminBFF/api?user=' + "test",
         try {
             var connection = new signalR.HubConnectionBuilder()
-                .withUrl(this.baseAPI + '?hub=flight')
+                .withUrl(this.baseAPI + '?user=' + userID)
                 .build();
 
-            connection.on('pingSignalR', this.handlePing);
+            connection.on('signedIn', this.handleSignIn);
+            connection.on('getTeamComplete', this.teamNotification);
+            connection.on('message', this.getMessage);
+            connection.on('choice', this.getChoice);
 
             // connection.on('otherTarget', this.handleOtherTarget);
             connection.onclose(() => console.log('disconnected'));
-            connection.start().then(connectedCallback).catch((reason) => { console.log(reason) });
+            connection.start().then(connectedCallback).catch((reason: any) => { console.log(reason) });
         }
         catch (error) {
             console.log(error);
