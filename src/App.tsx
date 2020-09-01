@@ -18,6 +18,7 @@ interface AppState {
   completeTeams: string[];
   messages: string[];
   choice: string;
+  questionNumber:number;
 }
 interface AppProps {
 
@@ -37,9 +38,14 @@ export default class App extends React.Component<AppProps, AppState> {
       teams: [],
       completeTeams: [],
       messages: [],
-      choice: ""
+      choice: "",
+      questionNumber:0
     };
-    this.flightClient = new FlightClient(this.onTeamComplete, this.getMessage, this.getChoice);
+    this.flightClient = new FlightClient(this.onTeamComplete, this.getMessage, this.getChoice, this.getNextQuestion);
+  }
+
+  getNextQuestion= (questionID:number)=>{
+    this.setState({questionNumber:questionID});
   }
 
   sendMessage = (message: string) => {
@@ -53,7 +59,8 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
   getChoice = (team: string, choice: string) => {
-    this.setState({ choice: team + ":" + choice });
+    if (team != this.state.team)
+      this.setState({ choice: team + ":" + choice });
   };
 
   sendChoice = (choice: string) => {
@@ -79,17 +86,66 @@ export default class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  onTeamComplete = (team: string) => {
-    this.setState({ mode: "Level1" });
-    var teams = this.state.completeTeams;
-    if (teams.length == 0) {
-      teams.push(team);
-      this.setState({ completeTeams: teams });
-    }
-    else
-      this.setState({ mode: "Level1" });
+  onlyUnique = (value: any, index: any, self: any) => {
+    return self.indexOf(value) === index;
   }
 
+  onTeamComplete = (team: string[]) => {
+
+    if (team.length == 2 && this.state.completeTeams.length == 2)
+      return;
+
+    var completeTeams: string[] = [];
+    for (var i = 0; i < team.length; i++)
+      completeTeams.push(team[i]);
+
+    var teams = this.state.completeTeams;
+    for (var i = 0; i < team.length; i++)
+      teams.push(team[i]);
+
+    teams = teams.filter(this.onlyUnique);
+
+    if (teams.length == 2) {
+      this.flightClient.sendTeamComplete(teams);
+      this.setState({ mode: "Level1", completeTeams: teams });
+    }
+    else {
+      this.setState({ completeTeams: teams });
+    }
+  }
+
+  onTeamCompleteLocal = (team: string[]) => {
+
+    if (team.length == 2 && this.state.completeTeams.length == 2)
+      return;
+
+    var completeTeams: string[] = [];
+    for (var i = 0; i < team.length; i++)
+      completeTeams.push(team[i]);
+
+    var teams = this.state.completeTeams;
+    for (var i = 0; i < team.length; i++)
+      teams.push(team[i]);
+
+    teams = teams.filter(this.onlyUnique);
+
+    if (teams.length == 2) {
+      this.flightClient.sendTeamComplete(teams);
+      this.setState({ mode: "Level1", completeTeams: teams });
+    }
+    else {
+      if (teams.length == 1) {
+        this.flightClient.sendTeamComplete(teams);
+      }
+      else {
+        this.setState({ completeTeams: teams });
+      }
+    }
+  }
+
+  onSendQuestion=(index:number)=>{
+    this.flightClient.setQuestionIndex(index);
+  }
 
   handleLevel = (level: string) => {
     this.setState({ mode: "Level2" });
@@ -105,19 +161,22 @@ export default class App extends React.Component<AppProps, AppState> {
           onName={this.handleName}
           waitMessages={this.state.waitMessage}
           teams={this.state.teams}
-          onTeamComplete={this.onTeamComplete}
+          onTeamComplete={this.onTeamCompleteLocal}
         />
         break;
       case "Level1":
         content = <GamePage
+         
           levelData={(new Level1).levelDesign}
           playerName={this.state.playerName}
           onLevel={this.handleLevel}
-          choice={this.state.choice}
+          otherTeamChoice={this.state.choice}
           messages={this.state.messages}
           team={this.state.team}
           onSendChoice={this.sendChoice}
           onSendMessage={this.sendMessage}
+          onSendQuestion={this.onSendQuestion}
+          questionIndex ={this.state.questionNumber}
         />
         break
 

@@ -3,18 +3,20 @@ import * as signalR from "@aspnet/signalr";
 
 export default class FlightClient {
     private baseAPI: string;
-    teamNotification: (team: string) => void;
+    teamNotification: (team: string[]) => void;
     getMessage: (team: string, message: string) => void;
     getChoice: (team: string, choice: string) => void;
-
+    getNextQuestion: (questionID:number)=>void;
     constructor(
-        teamNotification: (team: string) => void,
+        teamNotification: (team: string[]) => void,
         getMessage: (team: string, message: string) => void,
-        getChoice: (team: string, choice: string) => void
+        getChoice: (team: string, choice: string) => void,
+        getNextQuestion: (questionID:number)=>void
     ) {
         this.teamNotification = teamNotification;
         this.getMessage = getMessage;
         this.getChoice = getChoice;
+        this.getNextQuestion = getNextQuestion;
 
         // this.baseAPI = "http://localhost:7071/api";
         this.baseAPI = "https://billtedbff.azurewebsites.net/api";
@@ -31,6 +33,8 @@ export default class FlightClient {
             this.onReply(name + " joined " + team, this.teams);
         }
     }
+
+
 
     handlePing = (x: any, y: any, z: any) => {
         console.log(x);
@@ -60,13 +64,23 @@ export default class FlightClient {
         fetch(this.baseAPI + '/SignIn?user=' + user + '&team=' + team, options);
     }
 
-    sendTeamComplete = (team: string) => {
+    setQuestionIndex=(index:number)=>{
         var options: RequestInit = {
             mode: 'cors',
             method: "GET"
         };
 
-        fetch(this.baseAPI + '/TeamComplete?team=' + team, options);
+        fetch(this.baseAPI + '/NextQuestion?Question=' +index, options);
+      }
+    
+
+    sendTeamComplete = (team: string[]) => {
+        var options: RequestInit = {
+            mode: 'cors',
+            method: "GET"
+        };
+
+        fetch(this.baseAPI + '/TeamComplete?team=' + team.join('-'), options);
     }
 
     sendMessage = (team: string, message: string) => {
@@ -99,6 +113,8 @@ export default class FlightClient {
             connection.on('getTeamComplete', this.teamNotification);
             connection.on('message', this.getMessage);
             connection.on('choice', this.getChoice);
+            connection.on('getNextQuestion', this.getNextQuestion);
+            
 
             // connection.on('otherTarget', this.handleOtherTarget);
             connection.onclose(() => console.log('disconnected'));

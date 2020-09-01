@@ -4,14 +4,14 @@ import { Button, Table, Row, Col } from "reactstrap";
 interface DashBoardState {
     playerName: string;
     team: string;
-
+showTeamComplete:boolean;
 }
 
 
 interface DashBoardProps {
     isWaiting: boolean;
     onName: (name: string, team: string) => void;
-    onTeamComplete: ( team: string) => void;
+    onTeamComplete: ( team: string[]) => void;
     waitMessages: string;
     teams: string[];
 }
@@ -21,7 +21,7 @@ export default class Welcome extends React.Component<DashBoardProps, DashBoardSt
     constructor(props: DashBoardProps) {
         super(props);
 
-        this.state = { playerName: "", team: "Choose" };
+        this.state = { playerName: "", team: "Choose",showTeamComplete:true };
     }
 
     handleName = (event: SyntheticEvent) => {
@@ -34,7 +34,8 @@ export default class Welcome extends React.Component<DashBoardProps, DashBoardSt
     }
 
     handleTeamClick = () => {
-        this.props.onTeamComplete(this.state.team);
+        this.props.onTeamComplete([this.state.team]);
+        this.setState({showTeamComplete:false});
     }
 
     handleTeam = (event: SyntheticEvent) => {
@@ -100,7 +101,7 @@ export default class Welcome extends React.Component<DashBoardProps, DashBoardSt
                     }
                     <tr>
                         <td></td>
-                        <td><button onClick={this.handleTeamClick} style={{ fontSize: "22px" }}>Team complete</button></td>
+                        <td>{this.state.showTeamComplete? <button onClick={this.handleTeamClick} style={{ fontSize: "22px" }}>Team complete</button> : <label>...</label> }</td>
                         <td></td>
                     </tr>
                 </tbody>

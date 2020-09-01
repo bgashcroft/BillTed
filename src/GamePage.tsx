@@ -4,11 +4,11 @@ import { Button, Table, Row, Col } from "reactstrap";
 
 interface GamePageState {
     isWaiting: boolean;
-    questionIndex: number;
     points: number;
     messageOut: string;
     itemChoice?: Options;
     isChoice: boolean;
+  
 }
 
 interface GamePageProps {
@@ -17,9 +17,11 @@ interface GamePageProps {
     onLevel: (name: string) => void;
     onSendMessage: (name: string) => void;
     onSendChoice: (name: string) => void;
+    onSendQuestion:(index:number)=>void;
     levelData: FrameData;
     messages: string[];
-    choice: string;
+    otherTeamChoice: string;
+    questionIndex:number;
 
 }
 
@@ -44,14 +46,13 @@ class OptionItem extends React.Component<OptionItemProps> {
 }
 
 export default class GamePage extends React.Component<GamePageProps, GamePageState> {
-
+    currentQuestionID:number;
     constructor(props: GamePageProps) {
         super(props);
-
+      this.  currentQuestionID=0;
         this.state = {
 
             isWaiting: true,
-            questionIndex: 0,
             points: 0,
             messageOut: "",
             isChoice: false
@@ -85,7 +86,7 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
         }
         else {
 
-            var question = this.props.levelData.questions[this.state.questionIndex];
+            var question = this.props.levelData.questions[this.props.questionIndex];
 
             var options = <Row>{question.options.map((x) => {
                 return <OptionItem option={x} onClick={this.handleOptionClick} />
@@ -178,22 +179,26 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
     }
 
     handleNextQuestion = () => {
-        this.setState({ questionIndex: this.state.questionIndex + 1, isChoice: false, itemChoice:undefined });
+        this.props.onSendQuestion( this.currentQuestionID + 1 );
     }
     renderChoice() {
 
-        var question = this.props.levelData.questions[this.state.questionIndex];
-        var otherTeam = this.props.choice;
+        var question = this.props.levelData.questions[this.props.questionIndex];
+        var otherTeam = this.props.otherTeamChoice;
 
-
-        var options: Options[] = question.options.filter(x => x.option === otherTeam);
+        var parts = otherTeam.split(':')[1];
+        var options: Options[] = question.options.filter(x => x.option === parts);
         var showTeam = null;
-        if (typeof options !== 'undefined' && options !== null && options.length>0)
-            showTeam = <h3> {"Other Team : " + options[0].option + " which is " + options[0].action}</h3>
+        if (typeof options !== 'undefined' && options !== null && options.length > 0) {
+            var action = options[0].action == 1 ? "Correct" : "False";
+            showTeam = <h3> {"Other Team : " + options[0].option + " which is " + action}</h3>
+        }
 
         var ourTeam = null;
-        if (typeof this.state.itemChoice !== 'undefined')
-            ourTeam = <h3> {"Our Team : " + this.state.itemChoice.option + " which is " + this.state.itemChoice.action}</h3>
+        if (typeof this.state.itemChoice !== 'undefined') {
+            var action = this.state.itemChoice.action == 1 ? "Correct" : "False";
+            ourTeam = <h3> {"Our Team : " + this.state.itemChoice.option + " which is " + action}</h3>
+        }
 
         return <Table>
             <Row>
@@ -208,13 +213,19 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
             </Row>
             <Row>
                 <Col>
-                    <Button onClick={this.handleNextQuestion}>Next Question</Button>
+                    {(showTeam !== null && ourTeam != null) ? <Button onClick={this.handleNextQuestion}>Next Question</Button> : <label>Waiting for other team</label>}
                 </Col>
             </Row>
         </Table>
     }
 
     render() {
+        if (this.currentQuestionID!==this.props.questionIndex)
+        {
+            this.currentQuestionID=this.props.questionIndex;
+            this.setState({isChoice:false});
+        }
+        
         if (this.state.isChoice)
             return this.renderChoice();
         else
