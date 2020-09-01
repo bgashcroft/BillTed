@@ -18,7 +18,8 @@ interface AppState {
   completeTeams: string[];
   messages: string[];
   choice: string;
-  questionNumber:number;
+  questionNumber: number;
+  level:any;
 }
 interface AppProps {
 
@@ -39,13 +40,20 @@ export default class App extends React.Component<AppProps, AppState> {
       completeTeams: [],
       messages: [],
       choice: "",
-      questionNumber:0
+      questionNumber: 0,
+      level:(new Level1).levelDesign
     };
     this.flightClient = new FlightClient(this.onTeamComplete, this.getMessage, this.getChoice, this.getNextQuestion);
   }
 
-  getNextQuestion= (questionID:number)=>{
-    this.setState({questionNumber:questionID});
+  getNextQuestion = (questionID: number) => {
+
+    var questionNum =Number(questionID);
+    if (questionNum>this.state.level.questions.length){
+      this.setState({choice:"",questionNumber:0});
+      this.handleLevel("");
+    }
+    this.setState({ choice: "", questionNumber: questionNum });
   }
 
   sendMessage = (message: string) => {
@@ -143,12 +151,20 @@ export default class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  onSendQuestion=(index:number)=>{
+  onSendQuestion = (index: number) => {
     this.flightClient.setQuestionIndex(index);
   }
 
   handleLevel = (level: string) => {
-    this.setState({ mode: "Level2" });
+    switch (this.state.mode) {
+      case "Level1":
+
+        this.setState({ mode: "Level2" });
+        break;
+      case "Level2":
+        this.setState({ mode: "Level3" });
+        break;
+    }
   }
 
   render() {
@@ -164,10 +180,10 @@ export default class App extends React.Component<AppProps, AppState> {
           onTeamComplete={this.onTeamCompleteLocal}
         />
         break;
-      case "Level1":
+      default:
         content = <GamePage
-         
-          levelData={(new Level1).levelDesign}
+
+          levelData={this.state.level}
           playerName={this.state.playerName}
           onLevel={this.handleLevel}
           otherTeamChoice={this.state.choice}
@@ -176,14 +192,9 @@ export default class App extends React.Component<AppProps, AppState> {
           onSendChoice={this.sendChoice}
           onSendMessage={this.sendMessage}
           onSendQuestion={this.onSendQuestion}
-          questionIndex ={this.state.questionNumber}
+          questionIndex={this.state.questionNumber}
         />
         break
-
-
-      // case "Game":
-      //   content = <GamePage  playerName={this.state.playerName} onLevel={this.handleLevel} />
-      //   break
 
     }
 

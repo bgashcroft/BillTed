@@ -4,7 +4,8 @@ import { Button, Table, Row, Col } from "reactstrap";
 
 interface GamePageState {
     isWaiting: boolean;
-    points: number;
+    mypoints: number;
+    theirPoints:number;
     messageOut: string;
     itemChoice?: Options;
     isChoice: boolean;
@@ -51,11 +52,11 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
         super(props);
       this.  currentQuestionID=0;
         this.state = {
-
             isWaiting: true,
-            points: 0,
+            mypoints: 0,
             messageOut: "",
-            isChoice: false
+            isChoice: false,
+            theirPoints:0
         };
     }
 
@@ -66,13 +67,16 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
 
     handleOptionClick = (option: Options) => {
         this.setState({ itemChoice: option });
-        this.props.onSendChoice(option.option);
+        this.props.onSendMessage(this.props.playerName + " chose " + option.option);
+       // this.props.onSendChoice(option.option);
     }
 
     sendOptionClick = () => {
         if (typeof this.state.itemChoice !== 'undefined')
+        {
             this.props.onSendChoice(this.state.itemChoice.option);
-        this.setState({ isChoice: true })
+             this.setState({ isChoice: true })
+        }
     }
 
     handleMessage = (event: SyntheticEvent) => {
@@ -225,7 +229,7 @@ export default class GamePage extends React.Component<GamePageProps, GamePageSta
             this.currentQuestionID=this.props.questionIndex;
             this.setState({isChoice:false});
         }
-        
+
         if (this.state.isChoice)
             return this.renderChoice();
         else
