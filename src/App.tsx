@@ -49,7 +49,7 @@ export default class App extends React.Component<AppProps, AppState> {
   getNextQuestion = (questionID: number) => {
 
     var questionNum =Number(questionID);
-    if (questionNum>this.state.level.questions.length){
+    if (questionNum>=this.state.level.questions.length){
       this.setState({choice:"",questionNumber:0});
       this.handleLevel("");
     }
